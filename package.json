@@ -1,17 +1,24 @@
 {
   "name": "product9-server",
-  "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "start": "yarn build && node ."
   },
-  "keywords": [],
-  "author": "Francisco Salinas",
-  "license": "MIT",
   "dependencies": {
-    "express": "^4.17.1",
-    "js-yaml": "^3.13.1",
-    "multer": "^1.4.2"
+    "vue": "^3.2.37"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^3.1.0",
+    "typescript": "^4.6.4",
+    "vite": "^3.1.0",
+    "vue-tsc": "^0.40.4",
+    "multer": "^1.4.2",
+    "express": "^4.17.1"
   }
 }
