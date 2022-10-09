@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>File Uploader</title>
+  </head>
+  <body>
+    <form action="/fileupload" enctype="multipart/form-data" method="POST">
+      <input type="file" name="binary" multiple />
+      <input
+        type="submit"
+        value="Upload file(s)"
+        onclick="e.preventDefault()"
+      />
+    </form>
+  </body>
+</html>
