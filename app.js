@@ -69,4 +69,4 @@ app.delete("/file/:file", (req, res) => {
 
 var port = process.env.PORT || 5000;
 
-app.listen(5001, console.log("Listening on port " + port));
+app.listen(port, console.log("Listening on port " + port));
