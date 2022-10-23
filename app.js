@@ -6,7 +6,11 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
+//import axios from "redaxios";
 
+function extension(filename) {
+  return filename.match(/\.[0-9a-z]+$/i)[0];
+}
 app.use(
   busboy({
     highWaterMark: 100 * 1024 * 1024, // Set 100MiB buffer
@@ -14,26 +18,27 @@ app.use(
 );
 app.post("/fileupload", async function (req, res) {
   req.pipe(req.busboy);
-
-  req.busboy.on("file", (fieldname, file, info) => {
+  req.busboy.on("file", (_fieldname, file, info) => {
     const filename = info.filename;
-    console.log(`Upload of '${filename}' started`);
+    if (extension(filename) === ".csv" || extension(filename) === ".json") {
+      console.log(`Upload of '${filename}' started`);
+      const fstream = fs.createWriteStream(__dirname + "/uploads/" + filename);
+      file.pipe(fstream);
 
-    const fstream = fs.createWriteStream(__dirname + "/uploads/" + filename);
-
-    file.pipe(fstream);
-
-    /*fstream.on("drain", () => {
+      /*fstream.on("drain", () => {
       const written = parseInt(fstream.bytesWritten);
       const total = parseInt(req.headers["content-length"]);
       const pWritten = ((written / total) * 100).toFixed(2);
       console.log(`Processing ${filename} ...  ${pWritten}% done`);
     });*/
 
-    fstream.on("close", () => {
-      console.log(`Upload of '${filename}' finished`);
-      res.redirect("/");
-    });
+      fstream.on("close", () => {
+        console.log(filename + " uploaded.");
+        res.send(filename + " uploaded.");
+      });
+    } else {
+      res.send("ERROR: Invalid File Type. Upload only .json or .csv files.");
+    }
   });
 });
 
@@ -60,11 +65,45 @@ app.get("/file/:file", (req, res) => {
   res.sendFile(path.join(__dirname, "uploads/" + req.params.file));
 });
 
+function deletedMsg(req, res) {
+  console.log(req.params.file + " has been deleted.");
+  res.send(req.params.file + " has been deleted.");
+}
+
 app.delete("/file/:file", (req, res) => {
-  fs.unlink("uploads/" + req.params.file, function () {
-    console.log(req.params.file + " has been deleted!");
-  });
-  res.sendStatus(200);
+  fs.unlink("uploads/" + req.params.file, () => deletedMsg(req, res));
+});
+
+app.get("/detect-markers/:file", async (req, res) => {
+  if (extension(req.params.file) === ".json") {
+    const fstream = await fs.createReadStream(
+      path.join(__dirname, "uploads/" + req.params.file),
+      {
+        start: 0,
+        end: 1000,
+      }
+    );
+    let data = "";
+
+    fstream.on("readable", function () {
+      //basically loop until you find an ending } in a chunk
+
+      let chunk;
+
+      while (null !== (chunk = fstream.read())) {
+        data = chunk.toString();
+
+        while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
+          data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
+        }
+        data = JSON.parse(data);
+      }
+    });
+
+    fstream.on("end", () => {
+      res.send(Object.entries(data));
+    });
+  }
 });
 
 var port = process.env.PORT || 5000;
