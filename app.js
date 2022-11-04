@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
-//import axios from "redaxios";
+import csv from "csvtojson";
 
 function extension(filename) {
   return filename.match(/\.[0-9a-z]+$/i)[0];
@@ -72,6 +72,26 @@ function deletedMsg(req, res) {
 
 app.delete("/file/:file", (req, res) => {
   fs.unlink("uploads/" + req.params.file, () => deletedMsg(req, res));
+});
+
+app.post("/convert/:file", async function (req, res) {
+  if (extension(req.params.file) === ".csv") {
+    /*const jsonArray = await csv().fromFile(
+      path.join(__dirname, "uploads/" + req.params.file)
+    );*/
+    const readStream = fs.createReadStream(
+      path.join(__dirname, "uploads/" + req.params.file)
+    );
+    const writeStream = fs.createWriteStream(
+      __dirname +
+        "/uploads/" +
+        req.params.file.replace(".csv", "-generated.json")
+    );
+    await readStream.pipe(csv({ downstreamFormat: "array" })).pipe(writeStream);
+
+    console.log(req.params.file + " has been converted!");
+    res.send(req.params.file + " has been converted!");
+  }
 });
 
 app.get("/detect-markers/:file", async (req, res) => {

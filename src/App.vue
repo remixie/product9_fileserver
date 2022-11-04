@@ -31,9 +31,15 @@ let del = async (filename: string) => {
   server_response = await axios.delete("/file/" + filename);
   fetchData();
 };
+
+let convert = async (filename: string) =>{
+  server_response = await axios.post("/convert/" + filename);
+  fetchData();
+}
+
 fetchData();
 
-let setMarkers = async (filename: string) => {
+let getMarkers = async (filename: string) => {
   const resp = await axios.get("/detect-markers/" + filename);
   marker_response.data = resp.data;
 };
@@ -86,7 +92,17 @@ let dimensions = ref(['X','Y','Z','Color','Size'])
     <button @click="view(l)">
       View
     </button>
-    <button @click="setMarkers(l)">
+    
+    <button
+      v-if="String(l).includes('.csv')"
+      @click="convert(l)"
+    >
+      Convert To JSON
+    </button>
+    <button
+      v-else
+      @click="getMarkers(l)"
+    >
       Edit Dimensions
     </button>
     <button @click="del(l)">
