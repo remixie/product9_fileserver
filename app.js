@@ -100,7 +100,7 @@ app.get("/detect-markers/:file", async (req, res) => {
       path.join(__dirname, "uploads/" + req.params.file),
       {
         start: 0,
-        end: 1000,
+        end: 5000,
       }
     );
     let data = "";
