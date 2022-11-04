@@ -32,10 +32,10 @@ let del = async (filename: string) => {
   fetchData();
 };
 
-let convert = async (filename: string) =>{
+let convert = async (filename: string) => {
   server_response = await axios.post("/convert/" + filename);
   fetchData();
-}
+};
 
 fetchData();
 
@@ -44,37 +44,27 @@ let getMarkers = async (filename: string) => {
   marker_response.data = resp.data;
 };
 
-let dimensions = ref(['X','Y','Z','Color','Size'])
+let dimensions = ref(["X", "Y", "Z", "Color", "Size"]);
 </script>
 
 <template>
-  <form
-    ref="fileForm"
-    style="display: inline-block"
-  >
-    <input
-      type="file"
-      name="file"
-    >
+  <h1>Product9 File Server</h1>
+  <form ref="fileForm" style="display: inline-block">
+    <input type="file" name="file" />
   </form>
   <input
     type="button"
     style="display: inline-block"
-    value="Upload dataset"
+    value="Upload JSON/CSV dataset"
     @click="submitFile()"
-  >
+  />
   <div>{{ server_response.data.length ? server_response.data : "" }}</div>
 
   <div v-if="marker_response.data.length">
-    <div
-      v-for="d in dimensions"
-      :key="d"
-    >
-      {{ d }}: <select>
-        <option
-          v-for="m in marker_response.data"
-          :key="m"
-        >
+    <div v-for="d in dimensions" :key="d">
+      {{ d }}:
+      <select>
+        <option v-for="m in marker_response.data" :key="m">
           {{ m[0] }}
         </option>
       </select>
@@ -84,29 +74,16 @@ let dimensions = ref(['X','Y','Z','Color','Size'])
   <div>
     <h2>Uploaded Dataset(s)</h2>
   </div>
-  <div
-    v-for="l in list.data"
-    :key="l"
-  >
-    {{ l }}  ()
-    <button @click="view(l)">
-      View
-    </button>
+  <div v-for="l in list.data" :key="l">
+    {{ l }} 
+      <span v-for="d in dimensions">( {{d}}: ? ) </span>
     
-    <button
-      v-if="String(l).includes('.csv')"
-      @click="convert(l)"
-    >
+    <button @click="view(l)">View</button>
+
+    <button v-if="String(l).includes('.csv')" @click="convert(l)">
       Convert To JSON
     </button>
-    <button
-      v-else
-      @click="getMarkers(l)"
-    >
-      Edit Dimensions
-    </button>
-    <button @click="del(l)">
-      Delete
-    </button>
+    <button v-else @click="getMarkers(l)">Edit Dimensions</button>
+    <button @click="del(l)">Delete</button>
   </div>
 </template>
