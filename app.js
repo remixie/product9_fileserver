@@ -7,10 +7,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
 import csv from "csvtojson";
+import * as jsonpatch from "fast-json-patch/index.mjs";
 
 function extension(filename) {
   return filename.match(/\.[0-9a-z]+$/i)[0];
 }
+
+app.use(express.json());
 app.use(
   busboy({
     highWaterMark: 100 * 1024 * 1024, // Set 100MiB buffer
@@ -46,6 +49,16 @@ app.get("/filelist", async (_req, res) => {
   let list = [];
   let files = await fs.promises.readdir(path.resolve(__dirname, "uploads"));
 
+  files.sort((a, b) => {
+    if (extension(a) > extension(b)) {
+      return -1;
+    }
+    if (extension(a) < extension(b)) {
+      return 1;
+    }
+    return 0;
+  });
+
   for (let file of files) {
     list.push(file);
   }
@@ -57,50 +70,99 @@ app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "dist/index.html"));
 });
 
-app.get("/assets/:file", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist/assets/" + req.params.file));
+app.get("/assets/:filename", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist/assets/" + req.params.filename));
 });
 
-app.get("/file/:file", (req, res) => {
-  res.sendFile(path.join(__dirname, "uploads/" + req.params.file));
+app.get("/file/:filename", (req, res) => {
+  res.sendFile(path.join(__dirname, "uploads/" + req.params.filename));
 });
 
 function deletedMsg(req, res) {
-  console.log(req.params.file + " has been deleted.");
-  res.send(req.params.file + " has been deleted.");
+  console.log(req.params.filename + " has been deleted.");
+  res.send(req.params.filename + " has been deleted.");
 }
 
-app.delete("/file/:file", (req, res) => {
-  fs.unlink("uploads/" + req.params.file, () => deletedMsg(req, res));
+app.delete("/file/:filename", (req, res) => {
+  fs.unlink("uploads/" + req.params.filename, () => deletedMsg(req, res));
 });
 
-app.post("/convert/:file", async function (req, res) {
-  if (extension(req.params.file) === ".csv") {
-    /*const jsonArray = await csv().fromFile(
-      path.join(__dirname, "uploads/" + req.params.file)
-    );*/
+app.post("/convert/:filename", async function (req, res) {
+  if (extension(req.params.filename) === ".csv") {
     const readStream = fs.createReadStream(
-      path.join(__dirname, "uploads/" + req.params.file)
+      path.join(__dirname, "uploads/" + req.params.filename)
     );
     const writeStream = fs.createWriteStream(
       __dirname +
         "/uploads/" +
-        req.params.file.replace(".csv", "-generated.json")
+        req.params.filename.replace(".csv", "-generated.json")
     );
     await readStream.pipe(csv({ downstreamFormat: "array" })).pipe(writeStream);
 
-    console.log(req.params.file + " has been converted!");
-    res.send(req.params.file + " has been converted!");
+    console.log(req.params.filename + " has been converted!");
+    res.send(req.params.filename + " has been converted!");
   }
 });
 
-app.get("/detect-markers/:file", async (req, res) => {
-  if (extension(req.params.file) === ".json") {
+import metadata from "./public/metadata.json" assert { type: "json" };
+app.get("/get-fields/:filename", async (req, res) => {
+  //TODO: Fix the metadata.json caching issue on save
+  res.send(
+    metadata.data.filter((data) => data.id === req.params.filename)[0]
+      ?.attributes
+  );
+});
+
+app.post("/set-fields/:filename", async (req, res) => {
+  //console.log("selected fields: " + JSON.stringify(req.body));
+
+  if (req.body.includes(null)) {
+    res.send("All dimensions must be set with a field.");
+  } else {
+    let op = "add";
+    if (
+      Object.values(metadata.data).filter(
+        (data) => data.id == req.params.filename
+      ).length
+    ) {
+      op = "replace";
+    }
+
+    const patch = [
+      {
+        op,
+        path: "/data/",
+        value: {
+          id: req.params.filename,
+          attributes: {
+            x: req.body[0],
+            y: req.body[1],
+            z: req.body[2],
+            color: req.body[3],
+            size: req.body[4],
+          },
+        },
+      },
+    ];
+    let new_metadata = jsonpatch.applyPatch(metadata, patch).newDocument;
+    const fstream = fs.createWriteStream(__dirname + "/public/metadata.json");
+    fstream.write(JSON.stringify(new_metadata));
+    res.send("Saved fields as dimensions for " + req.params.filename);
+  }
+});
+
+import dimensions from "./public/dimensions.json" assert { type: "json" };
+app.get("/get-dimensions", (_req, res) => {
+  res.send(dimensions);
+});
+
+app.get("/detect-fields/:filename", async (req, res) => {
+  if (extension(req.params.filename) === ".json") {
     const fstream = await fs.createReadStream(
-      path.join(__dirname, "uploads/" + req.params.file),
+      path.join(__dirname, "uploads/" + req.params.filename),
       {
         start: 0,
-        end: 5000,
+        end: 5000, //find all fields within the first 5000 characters
       }
     );
     let data = "";
@@ -110,7 +172,7 @@ app.get("/detect-markers/:file", async (req, res) => {
 
       let chunk;
 
-      while (null !== (chunk = fstream.read())) {
+      while ((chunk = fstream.read()) !== null) {
         data = chunk.toString();
 
         while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
@@ -121,7 +183,11 @@ app.get("/detect-markers/:file", async (req, res) => {
     });
 
     fstream.on("end", () => {
-      res.send(Object.entries(data));
+      res.send(
+        Object.entries(data).map((d) => {
+          return d[0];
+        })
+      );
     });
   }
 });

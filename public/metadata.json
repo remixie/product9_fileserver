@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "id": "example.json",
+      "attributes": {
+        "x": "color",
+        "y": "y",
+        "z": "x",
+        "color": "y",
+        "size": "z"
+      }
+    }
+  ]
+}
