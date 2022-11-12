@@ -20,7 +20,11 @@ app.use(
   })
 );
 app.post("/fileupload", async function (req, res) {
+  console.log("req -> ");
+  console.log(req);
   req.pipe(req.busboy);
+  console.log("req.busboy -> ");
+  console.log(req.busboy);
   req.busboy.on("file", (_fieldname, file, info) => {
     const filename = info.filename;
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
