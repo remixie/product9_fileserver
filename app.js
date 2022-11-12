@@ -16,7 +16,7 @@ function extension(filename) {
 app.use(express.json());
 app.use(
   busboy({
-    highWaterMark: 100 * 1024 * 1024, // Set 100MiB buffer
+    highWaterMark: 10000 * 1024 * 1024, // Set 10000MiB buffer
   })
 );
 app.post("/fileupload", async function (req, res) {
@@ -47,11 +47,11 @@ app.post("/fileupload", async function (req, res) {
     res.end("Done parsing form!");
   });
 
-  console.log("req -> ");
-  console.log(req);
+  //console.log("req -> ");
+  //console.log(req);
   req.pipe(req.busboy);
-  console.log("req.busboy -> ");
-  console.log(req.busboy);
+  //console.log("req.busboy -> ");
+  //console.log(req.busboy);
 });
 
 app.get("/filelist", async (_req, res) => {
