@@ -1,14 +1,1 @@
-{
-  "data": [
-    {
-      "id": "example.json",
-      "attributes": {
-        "x": "z",
-        "y": "y",
-        "z": "x",
-        "color": "color",
-        "size": "y"
-      }
-    }
-  ]
-}
+{"data":[{"id":"example.json","attributes":{"x":"y","y":"z","z":"z","color":"color","size":"color"}}]}

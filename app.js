@@ -43,6 +43,10 @@ app.post("/fileupload", async function (req, res) {
       res.send("ERROR: Invalid File Type. Upload only .json or .csv files.");
     }
   });
+  req.busboy.on("finish", function () {
+    res.writeHead(200, { Connection: "close" });
+    res.end("Done parsing form!");
+  });
 });
 
 app.get("/filelist", async (_req, res) => {

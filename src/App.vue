@@ -93,7 +93,21 @@ let getLinkedFields = async (filename: string) => {
 </script>
 
 <template>
-  <h1>Product9 File Server</h1>
+  <h2>Product9 File Server</h2>
+  <div>
+    <b>API Calls:</b>
+    <br>POST /fileupload
+    <br>GET /filelist
+    <br>GET /assets/:filename
+    <br>GET /file/:filename
+    <br>DELETE /file/:filename
+    <br>POST /convert/:filename
+    <br>GET /get-fields/:filename
+    <br>POST /set-fields/:filename
+    <br>GET /get-dimensions
+    <br>GET /detect-fields/:filename
+  </div>
+  <br>
   <form
     ref="fileForm"
     style="display: inline-block"
@@ -138,9 +152,9 @@ let getLinkedFields = async (filename: string) => {
     :key="i"
   >
     {{ l }}
-    <span>
+    <div>
       {{ linked_fields.data[i] }}
-    </span>
+    </div>
     <button @click="view(l)">
       View
     </button>
@@ -159,5 +173,6 @@ let getLinkedFields = async (filename: string) => {
     <button @click="del(l)">
       Delete
     </button>
+    <br><br>
   </div>
 </template>
