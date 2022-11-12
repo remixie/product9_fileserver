@@ -20,11 +20,6 @@ app.use(
   })
 );
 app.post("/fileupload", async function (req, res) {
-  console.log("req -> ");
-  console.log(req);
-  req.pipe(req.busboy);
-  console.log("req.busboy -> ");
-  console.log(req.busboy);
   req.busboy.on("file", (_fieldname, file, info) => {
     const filename = info.filename;
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
@@ -51,6 +46,12 @@ app.post("/fileupload", async function (req, res) {
     res.writeHead(200, { Connection: "close" });
     res.end("Done parsing form!");
   });
+
+  console.log("req -> ");
+  console.log(req);
+  req.pipe(req.busboy);
+  console.log("req.busboy -> ");
+  console.log(req.busboy);
 });
 
 app.get("/filelist", async (_req, res) => {
