@@ -30,7 +30,8 @@ let fetchData = async () => {
   })
 
   for (let l in temp) {
-     getLinkedFields(temp[l]) 
+    linked_fields.data = new Array()
+    getLinkedFields(temp[l]) 
   }
 };
 fetchData();
@@ -84,11 +85,10 @@ let convert = async (filename: string) => {
   fetchData();
 };
 
-let linked_fields = reactive([] as object[]);
+let linked_fields = reactive({data:[] as object[]});
 let getLinkedFields = async (filename: string) => {
   const response = await axios.get("/get-fields/" + filename);
-  //console.log(response.data);
-  linked_fields.push(response.data);
+  linked_fields.data.push(response.data);
 }
 </script>
 
@@ -138,14 +138,12 @@ let getLinkedFields = async (filename: string) => {
     :key="i"
   >
     {{ l }}
-    <span v-if="String(l).includes('.json')">
-      {{ linked_fields[i] }}
+    <span>
+      {{ linked_fields.data[i] }}
     </span>
-
     <button @click="view(l)">
       View
     </button>
-
     <button
       v-if="String(l).includes('.csv')"
       @click="convert(l)"

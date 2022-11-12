@@ -3,11 +3,11 @@
     {
       "id": "example.json",
       "attributes": {
-        "x": "color",
+        "x": "z",
         "y": "y",
         "z": "x",
-        "color": "y",
-        "size": "z"
+        "color": "color",
+        "size": "y"
       }
     }
   ]

@@ -104,9 +104,8 @@ app.post("/convert/:filename", async function (req, res) {
   }
 });
 
-import metadata from "./public/metadata.json" assert { type: "json" };
+import metadata from "./metadata/setfields.json" assert { type: "json" };
 app.get("/get-fields/:filename", async (req, res) => {
-  //TODO: Fix the metadata.json caching issue on save
   res.send(
     metadata.data.filter((data) => data.id === req.params.filename)[0]
       ?.attributes
@@ -114,8 +113,6 @@ app.get("/get-fields/:filename", async (req, res) => {
 });
 
 app.post("/set-fields/:filename", async (req, res) => {
-  //console.log("selected fields: " + JSON.stringify(req.body));
-
   if (req.body.includes(null)) {
     res.send("All dimensions must be set with a field.");
   } else {
@@ -145,13 +142,15 @@ app.post("/set-fields/:filename", async (req, res) => {
       },
     ];
     let new_metadata = jsonpatch.applyPatch(metadata, patch).newDocument;
-    const fstream = fs.createWriteStream(__dirname + "/public/metadata.json");
+    const fstream = fs.createWriteStream(
+      __dirname + "/metadata/setfields.json"
+    );
     fstream.write(JSON.stringify(new_metadata));
     res.send("Saved fields as dimensions for " + req.params.filename);
   }
 });
 
-import dimensions from "./public/dimensions.json" assert { type: "json" };
+import dimensions from "./metadata/dimensions.json" assert { type: "json" };
 app.get("/get-dimensions", (_req, res) => {
   res.send(dimensions);
 });
