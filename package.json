@@ -6,9 +6,8 @@
   "main": "app.js",
   "scripts": {
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "start": "vite build && node .",
-    "dev": "yarn build && nodemon .",
+    "start": "yarn build && node .",
+    "dev": "vite --port 5000",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
     "format": "prettier .  --write"
   },
