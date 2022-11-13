@@ -90,89 +90,104 @@ let getLinkedFields = async (filename: string) => {
   const response = await axios.get("/get-fields/" + filename);
   linked_fields.data.push(response.data);
 }
+let disabledButton = ref(true);
+let checkfilename = function(e:Event){
+  let file = (<HTMLInputElement>e.target).files as FileList
+    if(!file[0].name.includes('.json') && !file[0].name.includes('.csv')){
+      disabledButton.value = true;
+    }
+    else{
+      disabledButton.value = false;
+    }
+}
 </script>
 
 <template>
-  <h2>Product9 File Server</h2>
-  <div>
-    <b>API Calls:</b>
-    <br>POST /fileupload
-    <br>GET /filelist
-    <br>GET /assets/:filename
-    <br>GET /file/:filename
-    <br>DELETE /file/:filename
-    <br>POST /convert/:filename
-    <br>GET /get-fields/:filename
-    <br>POST /set-fields/:filename
-    <br>GET /get-dimensions
-    <br>GET /detect-fields/:filename
-  </div>
-  <br>
-  <form
-    ref="fileForm"
-    style="display: inline-block"
-  >
-    <input
-      type="file"
-      name="file"
+  <div style="padding-top:20px; text-align: center;">
+    <h2>Product9 File Server</h2>
+    <div>
+      <b>API Calls:</b>
+      <br>GET /filelist
+      <br>POST /fileupload
+      <br>GET /file/:filename
+      <br>GET /get-dimensions
+      <br>GET /assets/:filename
+      <br>DELETE /file/:filename
+      <br>POST /convert/:filename
+      <br>GET /get-fields/:filename
+      <br>POST /set-fields/:filename
+      <br>GET /detect-fields/:filename
+    </div>
+    <br>
+    <form
+      ref="fileForm"
+      style="display: inline-block"
     >
-  </form>
-  <input
-    type="button"
-    style="display: inline-block"
-    value="Upload JSON/CSV dataset"
-    @click="submitFile()"
-  >
-  <br>
-  <div>{{ server_response.data.length ? server_response.data : "" }}</div>
-  <div v-if="found_fields.data.length">
+      <input
+        type="file"
+        name="file"
+        @change="checkfilename"
+      >
+    </form>
+    <br><br>
+    <input
+      type="button"
+      :disabled="disabledButton"
+      style="display: inline-block"
+      value="Upload JSON/CSV dataset"
+      @click="submitFile()"
+    >
+    <br><br>
+    <div>{{ server_response.data.length ? server_response.data : "" }}</div>
+    <div v-if="found_fields.data.length">
+      <div
+        v-for="(d, i) in dimensions.data"
+        :key="i"
+      >
+        {{ d }}:
+        <select v-model="selected_fields[i]">
+          <option
+            v-for="f in found_fields.data"
+            :key="f"
+          >
+            {{ f }}
+          </option>
+        </select>
+      </div>
+      <button @click="setFields(found_fields.filename)">
+        Save Fields as Dimensions
+      </button>
+    </div>
+    <div>
+      <h2>Uploaded Dataset(s)</h2>
+    </div>
     <div
-      v-for="(d, i) in dimensions.data"
+      v-for="(l, i) in list.data"
       :key="i"
     >
-      {{ d }}:
-      <select v-model="selected_fields[i]">
-        <option
-          v-for="f in found_fields.data"
-          :key="f"
-        >
-          {{ f }}
-        </option>
-      </select>
+      {{ l }}
+      <div>
+        {{ linked_fields.data[i] }}
+      </div>
+      <button @click="view(l)">
+        View
+      </button>
+      <button
+        v-if="String(l).includes('.csv')"
+        @click="convert(l)"
+      >
+        Convert To JSON
+      </button>
+      <button
+        v-else
+        @click="detectFields(l)"
+      >
+        Edit Dimensions
+      </button>
+      <button @click="del(l)">
+        Delete
+      </button>
+      <br><br>
     </div>
-    <button @click="setFields(found_fields.filename)">
-      Save Fields as Dimensions
-    </button>
-  </div>
-  <div>
-    <h2>Uploaded Dataset(s)</h2>
-  </div>
-  <div
-    v-for="(l, i) in list.data"
-    :key="i"
-  >
-    {{ l }}
-    <div>
-      {{ linked_fields.data[i] }}
-    </div>
-    <button @click="view(l)">
-      View
-    </button>
-    <button
-      v-if="String(l).includes('.csv')"
-      @click="convert(l)"
-    >
-      Convert To JSON
-    </button>
-    <button
-      v-else
-      @click="detectFields(l)"
-    >
-      Edit Dimensions
-    </button>
-    <button @click="del(l)">
-      Delete
-    </button>
-    <br><br>
   </div>
 </template>
