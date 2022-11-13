@@ -1,6 +1,14 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-// https://vitejs.dev/config/
+import { ViteMinifyPlugin } from "vite-plugin-minify";
+
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), ViteMinifyPlugin({})],
+  test: {
+    coverage: {
+      reporter: ["text", "json", "html"],
+      provider: "c8",
+    },
+  },
 });

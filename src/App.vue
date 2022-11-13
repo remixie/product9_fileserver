@@ -7,7 +7,15 @@ let fileForm = ref();
 let server_response = reactive({ data: [] });
 let found_fields = reactive({ data: [], filename: "" });
 let linked_fields = reactive({ data: [] as object[] });
-let is_prod = import.meta.env.PROD;
+let list = reactive({ data: [] as string[] });
+const is_prod = import.meta.env.PROD;
+const selected_fields = ref(Array());
+let disabledButton = ref(true);
+let resetFields = () => {
+  selected_fields.value = new Array(dimensions.data.length).fill(null);
+};
+//get x,y,z etc etc
+let dimensions = reactive({ data: [] });
 
 let submitFile = async () => {
   if (is_prod) {
@@ -22,8 +30,6 @@ let submitFile = async () => {
     fileForm.value.reset();
   }
 };
-
-let list = reactive({ data: [] as string[] });
 
 let fetchData = async () => {
   if (is_prod) {
@@ -43,21 +49,12 @@ let fetchData = async () => {
     ];
   }
 };
-fetchData();
 
-//get x,y,z etc etc
-let dimensions = reactive({ data: [] });
 let getDimensions = async () => {
   const dimensions_response = await axios.get("/get-dimensions");
   dimensions.data = dimensions_response.data;
   resetFields();
 };
-
-let resetFields = () => {
-  selected_fields.value = new Array(dimensions.data.length).fill(null);
-};
-
-getDimensions();
 
 //get fields from file
 let detectFields = async (filename: string) => {
@@ -78,7 +75,6 @@ let setFields = async (filename: string) => {
   server_response.data = resp.data;
   fetchData();
 };
-const selected_fields = ref(Array());
 
 let view = (filename: string) => {
   if (is_prod) {
@@ -99,7 +95,7 @@ let getLinkedFields = async (filename: string) => {
   const response = await axios.get("/get-fields/" + filename);
   linked_fields.data.push(response.data);
 };
-let disabledButton = ref(true);
+
 let checkfilename = function (e: Event) {
   let file = (<HTMLInputElement>e.target).files as FileList;
   if (!file[0].name.includes(".json") && !file[0].name.includes(".csv")) {
@@ -108,6 +104,9 @@ let checkfilename = function (e: Event) {
     disabledButton.value = false;
   }
 };
+
+fetchData();
+getDimensions();
 </script>
 
 <template>
