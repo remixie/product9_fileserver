@@ -112,37 +112,52 @@ let checkfilename = function (e: Event) {
 
 <template>
   <div style="padding-top: 20px; text-align: center">
-    <h2 style="margin-bottom: 0px">Product9 File Server</h2>
-    <b>{{ env ? "Frontend Development Mode" : "" }}</b>
-    <br /><br />
+    <h2 style="margin-bottom: 0px">
+      Product9 File Server
+    </h2>
+    <b>{{ !is_prod ? "Frontend Development Mode" : "" }}</b>
+    <br><br>
     <div>
       <b>API Calls:</b>
-      <br />GET <a href="/filelist">/filelist</a> <br />POST /fileupload
-      <br />GET /file/:filename <br />GET
-      <a href="/get-dimensions">/get-dimensions</a> <br />GET /assets/:filename
-      <br />DELETE /file/:filename <br />POST /convert/:filename <br />GET
-      /get-fields/:filename <br />POST /set-fields/:filename <br />GET
+      <br>GET <a href="/filelist">/filelist</a> <br>POST /fileupload
+      <br>GET /file/:filename <br>GET
+      <a href="/get-dimensions">/get-dimensions</a> <br>GET /assets/:filename
+      <br>DELETE /file/:filename <br>POST /convert/:filename <br>GET
+      /get-fields/:filename <br>POST /set-fields/:filename <br>GET
       /detect-fields/:filename
     </div>
-    <br />
-    <form ref="fileForm" style="display: inline-block">
-      <input type="file" name="file" @change="checkfilename" />
+    <br>
+    <form
+      ref="fileForm"
+      style="display: inline-block"
+    >
+      <input
+        type="file"
+        name="file"
+        @change="checkfilename"
+      >
     </form>
-    <br /><br />
+    <br><br>
     <input
       type="button"
       :disabled="disabledButton"
       style="display: inline-block"
       value="Upload JSON/CSV dataset"
       @click="submitFile()"
-    />
-    <br /><br />
+    >
+    <br><br>
     <div>{{ server_response.data.length ? server_response.data : "" }}</div>
     <div v-if="found_fields.data.length">
-      <div v-for="(d, i) in dimensions.data" :key="i">
+      <div
+        v-for="(d, i) in dimensions.data"
+        :key="i"
+      >
         {{ d }}:
         <select v-model="selected_fields[i]">
-          <option v-for="f in found_fields.data" :key="f">
+          <option
+            v-for="f in found_fields.data"
+            :key="f"
+          >
             {{ f }}
           </option>
         </select>
@@ -154,12 +169,20 @@ let checkfilename = function (e: Event) {
     <div>
       <h2>Uploaded Dataset(s)</h2>
     </div>
-    <div v-for="(l, i) in list.data" :key="i">
+    <div
+      v-for="(l, i) in list.data"
+      :key="i"
+    >
       {{ l }}
       <div>
         {{ linked_fields.data[i] }}
       </div>
-      <button :disabled="!is_prod" @click="view(l)">View</button>
+      <button
+        :disabled="!is_prod"
+        @click="view(l)"
+      >
+        View
+      </button>
       <button
         v-if="String(l).includes('.csv')"
         :disabled="!is_prod"
@@ -167,11 +190,20 @@ let checkfilename = function (e: Event) {
       >
         Convert To JSON
       </button>
-      <button v-else :disabled="!is_prod" @click="detectFields(l)">
+      <button
+        v-else
+        :disabled="!is_prod"
+        @click="detectFields(l)"
+      >
         Edit Dimensions
       </button>
-      <button :disabled="!is_prod" @click="del(l)">Delete</button>
-      <br /><br />
+      <button
+        :disabled="!is_prod"
+        @click="del(l)"
+      >
+        Delete
+      </button>
+      <br><br>
     </div>
   </div>
 </template>
