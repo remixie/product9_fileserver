@@ -2,13 +2,12 @@
 import { reactive } from "vue";
 import axios from "redaxios";
 import { ref } from "vue";
-
+import {is_prod, getDimensions} from "./utils"
 let fileForm = ref();
 let server_response = reactive({ data: [] });
 let found_fields = reactive({ data: [], filename: "" });
 let linked_fields = reactive({ data: [] as object[] });
 let list = reactive({ data: [] as string[] });
-const is_prod = import.meta.env.PROD;
 const selected_fields = ref(Array());
 let disabledButton = ref(true);
 let resetFields = () => {
@@ -48,12 +47,6 @@ let fetchData = async () => {
       { x: "y", y: "z", z: "z", color: "color", size: "color" },
     ];
   }
-};
-
-let getDimensions = async () => {
-  const dimensions_response = await axios.get("/get-dimensions");
-  dimensions.data = dimensions_response.data;
-  resetFields();
 };
 
 //get fields from file
@@ -106,7 +99,7 @@ let checkfilename = function (e: Event) {
 };
 
 fetchData();
-getDimensions();
+dimensions.data = await getDimensions();
 </script>
 
 <template>

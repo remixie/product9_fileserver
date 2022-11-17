@@ -10,5 +10,6 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       provider: "c8",
     },
+    environment: "jsdom",
   },
 });
