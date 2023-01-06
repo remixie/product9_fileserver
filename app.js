@@ -38,7 +38,6 @@ app.post("/fileupload", async function (req, res) {
   const multipartParams = {
     Bucket: process.env.BUCKET_NAME,
     Key: name,
-    ACL: "public-read",
   };
 
   const multipartUpload = await s3
