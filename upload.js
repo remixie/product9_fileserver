@@ -65,6 +65,8 @@ export class Uploader {
         fileKey: this.fileKey,
         parts: numberOfparts,
       };
+      console.log("AWSMultipartFileDataInput=>");
+      console.log(AWSMultipartFileDataInput);
 
       const urlsResponse = await api.request({
         url: "getMultipartPreSignedUrls",
