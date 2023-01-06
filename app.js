@@ -13,10 +13,10 @@ import csv from "csvtojson";
 import * as jsonpatch from "fast-json-patch/index.mjs";
 
 var s3 = new AWS.S3({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
   endpoint: "s3.us-west-004.backblazeb2.com",
   region: "us-west-004",
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
 });
 
 function extension(filename) {
