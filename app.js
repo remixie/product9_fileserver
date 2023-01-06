@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
 import AWS from "aws-sdk";
-import { v4 as uuidv4 } from "uuid";
 import csv from "csvtojson";
 
 import * as jsonpatch from "fast-json-patch/index.mjs";
@@ -77,18 +76,20 @@ app.get("/filelist", async (_req, res) => {
 });
 
 app.get("/", (_req, res) => {
-  var bucketName = "node-sdk-sample-" + uuidv4();
-  var keyName = "hello_world.txt";
-
-  s3.createBucket({ Bucket: bucketName }, function () {
-    var params = { Bucket: bucketName, Key: keyName, Body: "Hello World!" };
-    s3.putObject(params, function (err, data) {
-      if (err) console.log(err);
-      else
-        console.log(
-          "Successfully uploaded data to " + bucketName + "/" + keyName
-        );
-    });
+  var params = {
+    Bucket: process.env.BUCKET_NAME,
+    Key: "test.txt",
+    Body: "Hello World!",
+  };
+  s3.putObject(params, function (err, data) {
+    if (err) console.log(err);
+    else
+      console.log(
+        "Successfully uploaded data to " +
+          process.env.BUCKET_NAME +
+          "/" +
+          "text.txt"
+      );
   });
 
   res.sendFile(path.join(__dirname, "dist/index.html"));
