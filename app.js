@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
 import AWS from "aws-sdk";
-import uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import csv from "csvtojson";
 
 import * as jsonpatch from "fast-json-patch/index.mjs";
@@ -77,7 +77,7 @@ app.get("/filelist", async (_req, res) => {
 });
 
 app.get("/", (_req, res) => {
-  var bucketName = "node-sdk-sample-" + uuid.v4();
+  var bucketName = "node-sdk-sample-" + uuidv4();
   var keyName = "hello_world.txt";
 
   s3.createBucket({ Bucket: bucketName }, function () {
