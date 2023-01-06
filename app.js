@@ -40,6 +40,7 @@ app.post("/fileupload", async function (req, res) {
     Key: name,
     ACL: "public-read",
   };
+
   const multipartUpload = await s3
     .createMultipartUpload(multipartParams)
     .promise();

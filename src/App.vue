@@ -20,7 +20,7 @@ let submitFile = async () => {
     let formData = new FormData(fileForm.value);
 
     const uploader = new Uploader({
-        fileName: "foo",
+        fileName: "example.csv",
         file: formData,
       })
 

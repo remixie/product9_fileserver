@@ -2,7 +2,7 @@ import axios from "redaxios";
 
 // initializing axios
 const api = axios.create({
-  baseURL: "http://localhost:" + (process.env.PORT || 5000),
+  baseURL: window.location.href.slice(0, -1),
 });
 
 // original source: https://github.com/pilovm/multithreaded-uploader/blob/master/frontend/uploader.js
@@ -37,17 +37,17 @@ export class Uploader {
     try {
       // adding the the file extension (if present) to fileName
       let fileName = this.fileName;
-      const ext = this.file.name.split(".").pop();
+      /*const ext = this.file.name.split(".").pop();
       if (ext) {
         fileName += `.${ext}`;
-      }
+      }*/
 
       // initializing the multipart request
       const videoInitializationUploadInput = {
         name: fileName,
       };
       const initializeReponse = await api.request({
-        url: "/fileupload",
+        url: "fileupload",
         method: "POST",
         data: videoInitializationUploadInput,
       });
@@ -67,7 +67,7 @@ export class Uploader {
       };
 
       const urlsResponse = await api.request({
-        url: "/getMultipartPreSignedUrls",
+        url: "getMultipartPreSignedUrls",
         method: "POST",
         data: AWSMultipartFileDataInput,
       });
@@ -147,7 +147,7 @@ export class Uploader {
       };
 
       await api.request({
-        url: "/finalizeMultipartUpload",
+        url: "finalizeMultipartUpload",
         method: "POST",
         data: videoFinalizationMultiPartInput,
       });
