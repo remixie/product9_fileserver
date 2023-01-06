@@ -2,7 +2,7 @@
 import { reactive } from "vue";
 import axios from "redaxios";
 import { ref } from "vue";
-import {is_prod, getDimensions} from "./utils"
+import {is_prod, getDimensions, resetFields} from "./utils"
 let fileForm = ref();
 let server_response = reactive({ data: [] });
 let found_fields = reactive({ data: [], filename: "" });
@@ -10,9 +10,7 @@ let linked_fields = reactive({ data: [] as object[] });
 let list = reactive({ data: [] as string[] });
 const selected_fields = ref(Array());
 let disabledButton = ref(true);
-let resetFields = () => {
-  selected_fields.value = new Array(dimensions.data.length).fill(null);
-};
+
 //get x,y,z etc etc
 let dimensions = reactive({ data: [] });
 
@@ -54,7 +52,7 @@ let detectFields = async (filename: string) => {
   const response = await axios.get("/detect-fields/" + filename);
   found_fields.data = response.data;
   found_fields.filename = filename;
-  resetFields();
+  selected_fields.value = resetFields(dimensions);
 };
 
 let setFields = async (filename: string) => {

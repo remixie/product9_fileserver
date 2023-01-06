@@ -8,4 +8,8 @@ let getDimensions = async () => {
     return ["x", "y", "z", "color", "size"];
   }
 };
-export { is_prod, getDimensions };
+
+let resetFields = (dimensions: { data: string[] }) => {
+  return new Array(dimensions.data.length).fill(null);
+};
+export { is_prod, getDimensions, resetFields };
