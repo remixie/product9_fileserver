@@ -56,6 +56,8 @@ export class Uploader {
 
       this.fileId = AWSFileDataOutput.fileId;
       this.fileKey = AWSFileDataOutput.fileKey;
+      console.log("this.file =>");
+      console.log(this.file);
 
       // retrieving the pre-signed URLs
       const numberOfparts = Math.ceil(this.file.size / this.chunkSize);
