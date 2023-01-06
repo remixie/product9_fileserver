@@ -3,6 +3,7 @@ const app = express();
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import _ from "lodash";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
@@ -11,11 +12,15 @@ import csv from "csvtojson";
 
 import * as jsonpatch from "fast-json-patch/index.mjs";
 
-var s3 = new AWS.S3({
-  endpoint: "s3.us-west-004.backblazeb2.com",
-  region: "us-west-004",
+const s3Credentials = new AWS.Credentials({
   accessKeyId: process.env.ACCESS_KEY_ID,
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
+});
+
+var s3 = new AWS.S3({
+  endpoint: process.env.ENDPOINT,
+  region: process.env.REGION,
+  credentials: s3Credentials,
 });
 
 function extension(filename) {
@@ -29,19 +34,23 @@ app.use(
   })
 );
 app.post("/fileupload", async function (req, res) {
-  req.busboy.on("file", (_fieldname, file, info) => {
+  const { name } = req.body;
+  const multipartParams = {
+    Bucket: process.env.BUCKET_NAME,
+    Key: name,
+    ACL: "public-read",
+  };
+  const multipartUpload = await s3
+    .createMultipartUpload(multipartParams)
+    .promise();
+  res.send({ fileId: multipartUpload.UploadId, fileKey: multipartUpload.Key });
+
+  /*req.busboy.on("file", (_fieldname, file, info) => {
     const filename = info.filename;
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
       console.log(`Upload of '${filename}' started`);
       const fstream = fs.createWriteStream(__dirname + "/uploads/" + filename);
       file.pipe(fstream);
-
-      /*fstream.on("drain", () => {
-      const written = parseInt(fstream.bytesWritten);
-      const total = parseInt(req.headers["content-length"]);
-      const pWritten = ((written / total) * 100).toFixed(2);
-      console.log(`Processing ${filename} ...  ${pWritten}% done`);
-    });*/
 
       fstream.on("close", () => {
         console.log(filename + " uploaded.");
@@ -51,7 +60,57 @@ app.post("/fileupload", async function (req, res) {
       res.send("ERROR: Invalid File Type. Upload only .json or .csv files.");
     }
   });
-  req.pipe(req.busboy);
+  req.pipe(req.busboy);*/
+});
+
+app.post("/getMultipartPreSignedUrls", async (req, res) => {
+  const { fileKey, fileId, parts } = req.body;
+  const multipartParams = {
+    Bucket: process.env.BUCKET_NAME,
+    Key: fileKey,
+    UploadId: fileId,
+  };
+  const promises = [];
+  for (let index = 0; index < parts; index++) {
+    promises.push(
+      s3.getSignedUrlPromise("uploadPart", {
+        ...multipartParams,
+        PartNumber: index + 1,
+      })
+    );
+  }
+  const signedUrls = await Promise.all(promises);
+  // assign to each URL the index of the part to which it corresponds
+  const partSignedUrlList = signedUrls.map((signedUrl, index) => {
+    return {
+      signedUrl: signedUrl,
+      PartNumber: index + 1,
+    };
+  });
+  res.send({
+    parts: partSignedUrlList,
+  });
+});
+
+app.post("/finalizeMultipartUpload", async (req, res) => {
+  const { fileId, fileKey, parts } = req.body;
+  const multipartParams = {
+    Bucket: process.env.BUCKET_NAME,
+    Key: fileKey,
+    UploadId: fileId,
+    MultipartUpload: {
+      // ordering the parts to make sure they are in the right order
+      Parts: _.orderBy(parts, ["PartNumber"], ["asc"]),
+    },
+  };
+  const completeMultipartUploadOutput = await s3
+    .completeMultipartUpload(multipartParams)
+    .promise();
+
+  console.log(completeMultipartUploadOutput);
+  // completeMultipartUploadOutput.Location represents the
+  // URL to the resource just uploaded to the cloud storage
+  res.send();
 });
 
 app.get("/filelist", async (_req, res) => {
@@ -76,22 +135,6 @@ app.get("/filelist", async (_req, res) => {
 });
 
 app.get("/", (_req, res) => {
-  var params = {
-    Bucket: process.env.BUCKET_NAME,
-    Key: "test.txt",
-    Body: "Hello World!",
-  };
-  s3.putObject(params, function (err, data) {
-    if (err) console.log(err);
-    else
-      console.log(
-        "Successfully uploaded data to " +
-          process.env.BUCKET_NAME +
-          "/" +
-          "text.txt"
-      );
-  });
-
   res.sendFile(path.join(__dirname, "dist/index.html"));
 });
 
