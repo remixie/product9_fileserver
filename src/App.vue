@@ -3,7 +3,6 @@ import { reactive } from "vue";
 import axios from "redaxios";
 import { ref } from "vue";
 import {is_prod, getDimensions, resetFields} from "./utils"
-import { Uploader } from "../upload";
 let fileForm = ref();
 let server_response = reactive({ data: [] });
 let found_fields = reactive({ data: [], filename: "" });

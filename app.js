@@ -3,19 +3,18 @@ const app = express();
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { ListObjectsCommand } from "@aws-sdk/client-s3";
+import { ListObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
-import AWS from "aws-sdk";
 import csv from "csvtojson";
 
 import * as jsonpatch from "fast-json-patch/index.mjs";
 
-const s3Credentials = new AWS.Credentials({
+const credentials = {
   accessKeyId: process.env.ACCESS_KEY_ID,
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
-});
+};
 
 function extension(filename) {
   return filename.match(/\.[0-9a-z]+$/i)[0];
@@ -36,10 +35,10 @@ app.post("/fileupload", async function (req, res) {
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
       console.log(`Upload of '${filename}' started`);
 
-      let s3 = new AWS.S3({
+      let s3 = new S3Client({
         endpoint: process.env.ENDPOINT,
         region: process.env.REGION,
-        credentials: s3Credentials,
+        credentials,
         params: { Bucket: process.env.BUCKET_NAME, Key: filename, Body: file },
         options: { partSize: 5 * 1024 * 1024, queueSize: 10 }, // 5 MB
       });
@@ -72,10 +71,10 @@ app.post("/fileupload", async function (req, res) {
 app.get("/filelist", async (_req, res) => {
   let list = [];
 
-  let s3 = new AWS.S3({
+  let s3 = new S3Client({
     endpoint: process.env.ENDPOINT,
     region: process.env.REGION,
-    credentials: s3Credentials,
+    credentials: credentials,
   });
   let files = await s3.send(
     new ListObjectsCommand({
