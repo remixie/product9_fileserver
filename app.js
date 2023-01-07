@@ -76,13 +76,11 @@ app.get("/filelist", async (_req, res) => {
     region: process.env.REGION,
     credentials: credentials,
   });
-  let files = await s3
-    .send(
-      new ListObjectsCommand({
-        Bucket: process.env.BUCKET_NAME,
-      })
-    )
-    .map((x) => x.Key);
+  let files = await s3.send(
+    new ListObjectsCommand({
+      Bucket: process.env.BUCKET_NAME,
+    })
+  );
   console.log(files);
 
   files.sort((a, b) => {
