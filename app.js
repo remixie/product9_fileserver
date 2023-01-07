@@ -43,22 +43,17 @@ app.post("/fileupload", async function (req, res) {
         options: { partSize: 5 * 1024 * 1024, queueSize: 10 }, // 5 MB
       });
 
-      await s3
-        .upload()
-        .on("httpUploadProgress", function (evt) {
-          console.log(evt);
-        })
-        .send(function (err, data) {
-          s3UploadFinishTime = new Date();
-          if (busboyFinishTime && s3UploadFinishTime) {
-            res.json({
-              uploadStartTime: uploadStartTime,
-              busboyFinishTime: busboyFinishTime,
-              s3UploadFinishTime: s3UploadFinishTime,
-            });
-          }
-          console.log(err, data);
-        });
+      await s3.send(function (err, data) {
+        s3UploadFinishTime = new Date();
+        if (busboyFinishTime && s3UploadFinishTime) {
+          res.json({
+            uploadStartTime: uploadStartTime,
+            busboyFinishTime: busboyFinishTime,
+            s3UploadFinishTime: s3UploadFinishTime,
+          });
+        }
+        console.log(err, data);
+      });
 
       res.send(filename + " uploaded.");
     } else {
