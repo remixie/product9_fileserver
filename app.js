@@ -28,16 +28,13 @@ app.use(
   })
 );
 app.post("/fileupload", async function (req, res) {
-  req.busboy.on("file", (_fieldname, file, info) => {
+  req.busboy.on("file", async (_fieldname, file, info) => {
     const filename = info.filename;
     let busboyFinishTime = null,
       uploadStartTime = new Date(),
       s3UploadFinishTime = null;
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
       console.log(`Upload of '${filename}' started`);
-
-      //const fstream = fs.createWriteStream(__dirname + "/uploads/" + filename);
-      //file.pipe(fstream);
 
       let s3 = new AWS.S3({
         endpoint: process.env.ENDPOINT,
@@ -47,7 +44,8 @@ app.post("/fileupload", async function (req, res) {
         options: { partSize: 5 * 1024 * 1024, queueSize: 10 }, // 5 MB
       });
 
-      s3.upload()
+      await s3
+        .upload()
         .on("httpUploadProgress", function (evt) {
           console.log(evt);
         })
@@ -63,10 +61,7 @@ app.post("/fileupload", async function (req, res) {
           console.log(err, data);
         });
 
-      /*fstream.on("close", () => {
-        console.log(filename + " uploaded.");
-        res.send(filename + " uploaded.");
-      });*/
+      res.send(filename + " uploaded.");
     } else {
       res.send("ERROR: Invalid File Type. Upload only .json or .csv files.");
     }
