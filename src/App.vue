@@ -24,19 +24,6 @@ let submitFile = async () => {
       data: formData,
     });
 
-    /*const uploader = new Uploader({
-        fileName: "example.csv",
-        file: formData,
-      })
-
-      uploader
-        .onError((error: any) => {
-          //setFile(undefined)
-          console.error(error)
-        })
-
-        uploader.start()*/
-
     fetchData();
     fileForm.value.reset();
   }

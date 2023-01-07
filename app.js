@@ -4,7 +4,11 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { Upload } from "@aws-sdk/lib-storage";
-import { ListObjectsCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  ListObjectsCommand,
+  S3Client,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
@@ -12,10 +16,14 @@ import csv from "csvtojson";
 
 import * as jsonpatch from "fast-json-patch/index.mjs";
 
-const credentials = {
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
-};
+let client = new S3Client({
+  endpoint: process.env.ENDPOINT,
+  region: process.env.REGION,
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  },
+});
 
 function extension(filename) {
   return filename.match(/\.[0-9a-z]+$/i)[0];
@@ -30,43 +38,22 @@ app.use(
 app.post("/fileupload", async function (req, res) {
   req.busboy.on("file", async (_fieldname, file, info) => {
     const filename = info.filename;
-    //let busboyFinishTime = null,
-    //uploadStartTime = new Date(),
-    //s3UploadFinishTime = null;
+
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
       console.log(`Upload of '${filename}' started`);
 
-      let client = new S3Client({
-        endpoint: process.env.ENDPOINT,
-        region: process.env.REGION,
-        credentials,
-        //options: { partSize: 5 * 1024 * 1024, queueSize: 10 }, //5 MB
-      });
-
-      const parallelUploads3 = new Upload({
+      const upload = new Upload({
         client,
         queueSize: 4, // optional concurrency configuration
         leavePartsOnError: false, // optional manually handle dropped parts
         params: { Bucket: process.env.BUCKET_NAME, Key: filename, Body: file },
       });
 
-      parallelUploads3.on("httpUploadProgress", (progress) => {
+      upload.on("httpUploadProgress", (progress) => {
         console.log(progress);
       });
 
-      await parallelUploads3.done();
-
-      /*await s3.send(function (err, data) {
-        s3UploadFinishTime = new Date();
-        if (busboyFinishTime && s3UploadFinishTime) {
-          res.json({
-            uploadStartTime: uploadStartTime,
-            busboyFinishTime: busboyFinishTime,
-            s3UploadFinishTime: s3UploadFinishTime,
-          });
-        }
-        console.log(err, data);
-      });*/
+      await upload.done();
 
       res.send(filename + " uploaded.");
     } else {
@@ -79,12 +66,7 @@ app.post("/fileupload", async function (req, res) {
 app.get("/filelist", async (_req, res) => {
   let list = [];
 
-  let s3 = new S3Client({
-    endpoint: process.env.ENDPOINT,
-    region: process.env.REGION,
-    credentials: credentials,
-  });
-  let files = await s3.send(
+  let files = await client.send(
     new ListObjectsCommand({
       Bucket: process.env.BUCKET_NAME,
     })
@@ -117,7 +99,14 @@ app.get("/assets/:filename", (req, res) => {
 });
 
 app.get("/file/:filename", (req, res) => {
-  res.sendFile(path.join(__dirname, "uploads/" + req.params.filename));
+  res.redirect(
+    "https://" +
+      process.env.BUCKET_NAME +
+      ".s3." +
+      process.env.REGION +
+      ".backblazeb2.com/" +
+      req.params.filename
+  );
 });
 
 function deletedMsg(req, res) {
@@ -125,8 +114,16 @@ function deletedMsg(req, res) {
   res.send(req.params.filename + " has been deleted.");
 }
 
-app.delete("/file/:filename", (req, res) => {
-  fs.unlink("uploads/" + req.params.filename, () => deletedMsg(req, res));
+app.delete("/file/:filename", async (req, res) => {
+  //fs.unlink("uploads/" + req.params.filename, () => deletedMsg(req, res));
+
+  const command = new DeleteObjectCommand({
+    Bucket: process.env.BUCKET_NAME,
+    Key: req.params.filename,
+  });
+  await client.send(command);
+
+  deletedMsg(req, res);
 });
 
 app.post("/convert/:filename", async function (req, res) {
