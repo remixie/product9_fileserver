@@ -19,7 +19,13 @@ let submitFile = async () => {
   if (is_prod) {
     let formData = new FormData(fileForm.value);
 
-    const uploader = new Uploader({
+    server_response = await axios({
+      method: "post",
+      url: "/fileupload",
+      data: formData,
+    });
+
+    /*const uploader = new Uploader({
         fileName: "example.csv",
         file: formData,
       })
@@ -30,13 +36,7 @@ let submitFile = async () => {
           console.error(error)
         })
 
-        uploader.start()
-
-    /*server_response = await axios({
-      method: "post",
-      url: "/fileupload",
-      data: formData,
-    });*/
+        uploader.start()*/
 
     fetchData();
     fileForm.value.reset();

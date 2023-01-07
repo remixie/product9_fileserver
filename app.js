@@ -17,12 +17,6 @@ const s3Credentials = new AWS.Credentials({
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
 });
 
-var s3 = new AWS.S3({
-  endpoint: process.env.ENDPOINT,
-  region: process.env.REGION,
-  credentials: s3Credentials,
-});
-
 function extension(filename) {
   return filename.match(/\.[0-9a-z]+$/i)[0];
 }
@@ -34,34 +28,50 @@ app.use(
   })
 );
 app.post("/fileupload", async function (req, res) {
-  const { name } = req.body;
-  const multipartParams = {
-    Bucket: process.env.BUCKET_NAME,
-    Key: name,
-    ACL: "public-read",
-  };
-
-  const multipartUpload = await s3
-    .createMultipartUpload(multipartParams)
-    .promise();
-  res.send({ fileId: multipartUpload.UploadId, fileKey: multipartUpload.Key });
-
-  /*req.busboy.on("file", (_fieldname, file, info) => {
+  req.busboy.on("file", (_fieldname, file, info) => {
     const filename = info.filename;
+    let busboyFinishTime = null,
+      uploadStartTime = new Date(),
+      s3UploadFinishTime = null;
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
       console.log(`Upload of '${filename}' started`);
-      const fstream = fs.createWriteStream(__dirname + "/uploads/" + filename);
-      file.pipe(fstream);
 
-      fstream.on("close", () => {
+      //const fstream = fs.createWriteStream(__dirname + "/uploads/" + filename);
+      //file.pipe(fstream);
+
+      let s3 = new AWS.S3({
+        endpoint: process.env.ENDPOINT,
+        region: process.env.REGION,
+        credentials: s3Credentials,
+        params: { Bucket: process.env.BUCKET_NAME, Key: filename, Body: file },
+        options: { partSize: 5 * 1024 * 1024, queueSize: 10 }, // 5 MB
+      });
+
+      s3.upload()
+        .on("httpUploadProgress", function (evt) {
+          console.log(evt);
+        })
+        .send(function (err, data) {
+          s3UploadFinishTime = new Date();
+          if (busboyFinishTime && s3UploadFinishTime) {
+            res.json({
+              uploadStartTime: uploadStartTime,
+              busboyFinishTime: busboyFinishTime,
+              s3UploadFinishTime: s3UploadFinishTime,
+            });
+          }
+          console.log(err, data);
+        });
+
+      /*fstream.on("close", () => {
         console.log(filename + " uploaded.");
         res.send(filename + " uploaded.");
-      });
+      });*/
     } else {
       res.send("ERROR: Invalid File Type. Upload only .json or .csv files.");
     }
   });
-  req.pipe(req.busboy);*/
+  req.pipe(req.busboy);
 });
 
 app.post("/getMultipartPreSignedUrls", async (req, res) => {
