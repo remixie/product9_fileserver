@@ -3,6 +3,7 @@ const app = express();
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { Upload } from "@aws-sdk/lib-storage";
 import { ListObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,21 +30,33 @@ app.use(
 app.post("/fileupload", async function (req, res) {
   req.busboy.on("file", async (_fieldname, file, info) => {
     const filename = info.filename;
-    let busboyFinishTime = null,
-      uploadStartTime = new Date(),
-      s3UploadFinishTime = null;
+    //let busboyFinishTime = null,
+    //uploadStartTime = new Date(),
+    //s3UploadFinishTime = null;
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
       console.log(`Upload of '${filename}' started`);
 
-      let s3 = new S3Client({
+      let client = new S3Client({
         endpoint: process.env.ENDPOINT,
         region: process.env.REGION,
         credentials,
-        params: { Bucket: process.env.BUCKET_NAME, Key: filename, Body: file },
-        options: { partSize: 5 * 1024 * 1024, queueSize: 10 }, // 5 MB
+        //options: { partSize: 5 * 1024 * 1024, queueSize: 10 }, //5 MB
       });
 
-      await s3.send(function (err, data) {
+      const parallelUploads3 = new Upload({
+        client,
+        queueSize: 4, // optional concurrency configuration
+        leavePartsOnError: false, // optional manually handle dropped parts
+        params: { Bucket: process.env.BUCKET_NAME, Key: filename, Body: file },
+      });
+
+      parallelUploads3.on("httpUploadProgress", (progress) => {
+        console.log(progress);
+      });
+
+      await parallelUploads3.done();
+
+      /*await s3.send(function (err, data) {
         s3UploadFinishTime = new Date();
         if (busboyFinishTime && s3UploadFinishTime) {
           res.json({
@@ -53,7 +66,7 @@ app.post("/fileupload", async function (req, res) {
           });
         }
         console.log(err, data);
-      });
+      });*/
 
       res.send(filename + " uploaded.");
     } else {
