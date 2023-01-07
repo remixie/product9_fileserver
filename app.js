@@ -3,7 +3,7 @@ const app = express();
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import _ from "lodash";
+import { ListObjectsCommand } from "@aws-sdk/client-s3";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import busboy from "connect-busboy";
@@ -69,59 +69,20 @@ app.post("/fileupload", async function (req, res) {
   req.pipe(req.busboy);
 });
 
-app.post("/getMultipartPreSignedUrls", async (req, res) => {
-  const { fileKey, fileId, parts } = req.body;
-  const multipartParams = {
-    Bucket: process.env.BUCKET_NAME,
-    Key: fileKey,
-    UploadId: fileId,
-  };
-  const promises = [];
-  for (let index = 0; index < parts; index++) {
-    promises.push(
-      s3.getSignedUrlPromise("uploadPart", {
-        ...multipartParams,
-        PartNumber: index + 1,
-      })
-    );
-  }
-  const signedUrls = await Promise.all(promises);
-  // assign to each URL the index of the part to which it corresponds
-  const partSignedUrlList = signedUrls.map((signedUrl, index) => {
-    return {
-      signedUrl: signedUrl,
-      PartNumber: index + 1,
-    };
-  });
-  res.send({
-    parts: partSignedUrlList,
-  });
-});
-
-app.post("/finalizeMultipartUpload", async (req, res) => {
-  const { fileId, fileKey, parts } = req.body;
-  const multipartParams = {
-    Bucket: process.env.BUCKET_NAME,
-    Key: fileKey,
-    UploadId: fileId,
-    MultipartUpload: {
-      // ordering the parts to make sure they are in the right order
-      Parts: _.orderBy(parts, ["PartNumber"], ["asc"]),
-    },
-  };
-  const completeMultipartUploadOutput = await s3
-    .completeMultipartUpload(multipartParams)
-    .promise();
-
-  console.log(completeMultipartUploadOutput);
-  // completeMultipartUploadOutput.Location represents the
-  // URL to the resource just uploaded to the cloud storage
-  res.send();
-});
-
 app.get("/filelist", async (_req, res) => {
   let list = [];
-  let files = await fs.promises.readdir(path.resolve(__dirname, "uploads"));
+
+  let s3 = new AWS.S3({
+    endpoint: process.env.ENDPOINT,
+    region: process.env.REGION,
+    credentials: s3Credentials,
+  });
+  let files = await s3.send(
+    new ListObjectsCommand({
+      Bucket: process.env.BUCKET_NAME,
+    })
+  );
+  console.log(files);
 
   files.sort((a, b) => {
     if (extension(a) > extension(b)) {
