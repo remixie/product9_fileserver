@@ -71,7 +71,7 @@ app.get("/filelist", async (_req, res) => {
       Bucket: process.env.BUCKET_NAME,
     })
   );
-  console.log(files.Contents.map((x) => x.Key));
+  //console.log(files.Contents.map((x) => x.Key));
   files = files.Contents.map((x) => x.Key);
   files.sort((a, b) => {
     if (extension(a) > extension(b)) {
@@ -128,15 +128,23 @@ app.delete("/file/:filename", async (req, res) => {
 
 app.post("/convert/:filename", async function (req, res) {
   if (extension(req.params.filename) === ".csv") {
-    const readStream = fs.createReadStream(
-      path.join(__dirname, "uploads/" + req.params.filename)
-    );
-    const writeStream = fs.createWriteStream(
-      __dirname +
-        "/uploads/" +
-        req.params.filename.replace(".csv", "-generated.json")
-    );
-    await readStream.pipe(csv({ downstreamFormat: "array" })).pipe(writeStream);
+    const data = client.getObject({
+      Bucket: process.env.BUCKET_NAME,
+      Key: req.params.filename,
+    });
+
+    const csvData = data.Body.toString();
+    const jsonData = await csv().fromString(csvData);
+
+    const jsonBuffer = Buffer.from(JSON.stringify(jsonData));
+    await client
+      .putObject({
+        Bucket: process.env.BUCKET_NAME,
+        Key: req.params.filename + ".json",
+        Body: jsonBuffer,
+        ContentType: "application/json",
+      })
+      .promise();
 
     console.log(req.params.filename + " has been converted!");
     res.send(req.params.filename + " has been converted!");
