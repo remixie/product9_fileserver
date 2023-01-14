@@ -8,6 +8,8 @@ import {
   ListObjectsCommand,
   S3Client,
   DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
 } from "@aws-sdk/client-s3";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -128,22 +130,26 @@ app.delete("/file/:filename", async (req, res) => {
 
 app.post("/convert/:filename", async function (req, res) {
   if (extension(req.params.filename) === ".csv") {
-    const data = client.getObject({
-      Bucket: process.env.BUCKET_NAME,
-      Key: req.params.filename,
-    });
+    const data = await client.send(
+      new GetObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: req.params.filename,
+      })
+    );
 
     const csvData = data.Body.toString();
     const jsonData = await csv().fromString(csvData);
 
     const jsonBuffer = Buffer.from(JSON.stringify(jsonData));
     await client
-      .putObject({
-        Bucket: process.env.BUCKET_NAME,
-        Key: req.params.filename + ".json",
-        Body: jsonBuffer,
-        ContentType: "application/json",
-      })
+      .send(
+        new PutObjectCommand({
+          Bucket: process.env.BUCKET_NAME,
+          Key: req.params.filename + ".json",
+          Body: jsonBuffer,
+          ContentType: "application/json",
+        })
+      )
       .promise();
 
     console.log(req.params.filename + " has been converted!");
