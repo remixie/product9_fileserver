@@ -140,7 +140,7 @@ app.post("/convert/:filename", async function (req, res) {
     const csvData = data.Body.toString();
     const jsonData = await csv().fromString(csvData);
 
-    const jsonBuffer = Buffer.from(JSON.stringify(jsonData));
+    const jsonBuffer = Buffer.from(JSON.stringify(jsonData, "utf8"));
     await client.send(
       new PutObjectCommand({
         Bucket: process.env.BUCKET_NAME,
