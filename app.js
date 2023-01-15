@@ -5,6 +5,7 @@ import fs from "fs";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "url";
 import { Upload } from "@aws-sdk/lib-storage";
+import { isNil } from "ramda";
 import {
   ListObjectsCommand,
   S3Client,
@@ -83,23 +84,25 @@ app.get("/filelist", async (_req, res) => {
       Bucket: process.env.BUCKET_NAME,
     })
   );
-  //console.log(files.Contents.map((x) => x.Key));
-  files = files.Contents.map((x) => x.Key);
-  files.sort((a, b) => {
-    if (extension(a) > extension(b)) {
-      return -1;
-    }
-    if (extension(a) < extension(b)) {
-      return 1;
-    }
-    return 0;
-  });
+  if (!isNil(files.Contents)) {
+    //console.log(files.Contents.map((x) => x.Key));
+    files = files.Contents.map((x) => x.Key);
+    files.sort((a, b) => {
+      if (extension(a) > extension(b)) {
+        return -1;
+      }
+      if (extension(a) < extension(b)) {
+        return 1;
+      }
+      return 0;
+    });
 
-  for (let file of files) {
-    list.push(file);
+    for (let file of files) {
+      list.push(file);
+    }
+
+    res.send(list);
   }
-
-  res.send(list);
 });
 
 app.get("/", (_req, res) => {
