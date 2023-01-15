@@ -176,7 +176,7 @@ app.post("/convert/:filename", async function (req, res) {
   if (extension(req.params.filename) === ".csv") {
     const readable = await makeReadable(req.params.filename);
 
-    let jsonStream = readable.pipe(csv());
+    let jsonStream = readable.pipe(csv({ downstreamFormat: "array" }));
 
     let jsonData = "";
     jsonStream.on("data", (chunk) => {
@@ -256,21 +256,21 @@ app.get("/detect-fields/:filename", async (req, res) => {
     let data = "";
     readable.on("data", (chunk) => {
       //basically loop until you find an ending } in a chunk
-      data = chunk.toString().replace(/[\n\r]/g, "");
+      data = chunk.toString();
 
-      while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
-        data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
-      }
+      data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
 
-      data = JSON.parse(data);
+      console.log(data);
+
+      //data = JSON.parse(data);
     });
 
     readable.on("end", () => {
-      /*res.send(
+      res.send(
         Object.entries(data).map((d) => {
           return d[0];
         })
-      );*/
+      );
     });
   }
 });
