@@ -264,7 +264,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
       let i = 0;
       while (i < 3000) {
         try {
-          data = JSON.parse(data);
+          data = JSON.parse(data) + "]";
           //console.log(jsonData);
           break;
         } catch (err) {
