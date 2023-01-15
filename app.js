@@ -250,7 +250,7 @@ app.get("/get-dimensions", (_req, res) => {
 
 app.get("/detect-fields/:filename", async (req, res) => {
   if (extension(req.params.filename) === ".json") {
-    const readable = makeReadable(req.params.filename);
+    const readable = fs.createReadStream(makeReadable(req.params.filename));
 
     //let jsonStream = readable.pipe(csv());
     let data = "";
