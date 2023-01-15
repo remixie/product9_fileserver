@@ -252,31 +252,23 @@ app.get("/detect-fields/:filename", async (req, res) => {
   if (extension(req.params.filename) === ".json") {
     const readable = await makeReadable(req.params.filename);
 
+    const uniqueProperties = new Set();
+
     //let jsonStream = readable.pipe(csv());
     let data = "";
-    readable.on("readable", function () {
-      //basically loop until you find an ending } in a chunk
-
-      let chunk;
-
-      while ((chunk = readable.read()) !== null) {
-        data = chunk.toString();
-
-        console.log(data);
-
-        while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
-          data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
-        }
-        data = JSON.parse(data);
-      }
+    readable.on("data", (chunk) => {
+      data += chunk;
     });
 
     readable.on("end", () => {
-      res.send(
-        Object.entries(data).map((d) => {
-          return d[0];
-        })
-      );
+      data = JSON.parse(data);
+
+      for (const property in data[0]) {
+        uniqueProperties.add(property);
+      }
+      const uniquePropertiesArray = Array.from(uniqueProperties);
+
+      res.send(uniquePropertiesArray);
     });
   }
 });
