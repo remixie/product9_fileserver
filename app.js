@@ -250,16 +250,14 @@ app.get("/get-dimensions", (_req, res) => {
 
 app.get("/detect-fields/:filename", async (req, res) => {
   if (extension(req.params.filename) === ".json") {
-    const readable = fs.createReadStream(makeReadable(req.params.filename));
+    const readable = await makeReadable(req.params.filename);
 
     //let jsonStream = readable.pipe(csv());
     let data = "";
-    readable.on("readable", function () {
+    readable.on("data", (chunk) => {
       //basically loop until you find an ending } in a chunk
 
-      let chunk;
-
-      while ((chunk = readable.read()) !== null) {
+      while (chunk !== null) {
         data = chunk.toString();
 
         while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
