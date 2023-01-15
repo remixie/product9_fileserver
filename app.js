@@ -261,9 +261,20 @@ app.get("/detect-fields/:filename", async (req, res) => {
     });
 
     readable.on("end", () => {
-      console.log("data=>");
-      console.log(data);
-      data = JSON.parse(data);
+      let i = 0;
+      while (i < 1000) {
+        try {
+          data = JSON.parse(data);
+          //console.log(jsonData);
+          break;
+        } catch (err) {
+          //if it throws an error, remove the last character and try parsing again
+          const cleanedString = data.slice(0, -1);
+          data = cleanedString;
+          i++;
+        }
+      }
+      if (i === 10) console.log("Couldn't parse json after 1000 iterations");
 
       for (const property in data[0]) {
         uniqueProperties.add(property);
