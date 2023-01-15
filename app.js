@@ -168,16 +168,23 @@ app.post("/convert/:filename", async function (req, res) {
 
     });*/
 
-    let result = readable.pipe(csv());
+    let jsonStream = readable.pipe(csv());
 
-    await client.send(
-      new PutObjectCommand({
-        Bucket: process.env.BUCKET_NAME,
-        Key: req.params.filename.replace(".csv", "-generated.json"),
-        Body: result,
-        ContentType: "application/json",
-      })
-    );
+    let jsonData = "";
+    jsonStream.on("data", (chunk) => {
+      jsonData += chunk.toString();
+    });
+    jsonStream.on("end", async () => {
+      //console.log(result);
+      await client.send(
+        new PutObjectCommand({
+          Bucket: process.env.BUCKET_NAME,
+          Key: req.params.filename.replace(".csv", "-generated.json"),
+          Body: jsonData,
+          ContentType: "application/json",
+        })
+      );
+    });
 
     //readable.pipe(csv({ downstreamFormat: "array" })).pipe(writeStream)
 
