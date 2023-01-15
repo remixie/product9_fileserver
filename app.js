@@ -254,16 +254,19 @@ app.get("/detect-fields/:filename", async (req, res) => {
 
     //let jsonStream = readable.pipe(csv());
     let data = "";
-    readable.on("data", (chunk) => {
+    readable.on("readable", function () {
       //basically loop until you find an ending } in a chunk
-      data = chunk.toString();
 
-      data = data.match(/{(.|\n|\r)+}/g)[0].toString();
+      let chunk;
 
-      console.log(data);
-      return;
+      while ((chunk = readable.read()) !== null) {
+        data = chunk.toString();
 
-      //data = JSON.parse(data);
+        while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
+          data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
+        }
+        data = JSON.parse(data);
+      }
     });
 
     readable.on("end", () => {
