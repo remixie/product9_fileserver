@@ -261,6 +261,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
       data = data.match(/{(.|\n|\r)+}/g)[0].toString();
 
       console.log(data);
+      return;
 
       //data = JSON.parse(data);
     });
