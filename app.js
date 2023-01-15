@@ -262,7 +262,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
 
     readable.on("end", () => {
       let i = 0;
-      while (i < 1000) {
+      while (i < 3000) {
         try {
           data = JSON.parse(data);
           //console.log(jsonData);
@@ -276,7 +276,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
       }
       if (i === 10) console.log("Couldn't parse json after 1000 iterations");
 
-      console.log(data);
+      console.log(data[0]);
 
       for (const property in data[0]) {
         uniqueProperties.add(property);
