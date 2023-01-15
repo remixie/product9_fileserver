@@ -146,7 +146,18 @@ app.delete("/file/:filename", async (req, res) => {
   deletedMsg(req, res);
 });
 
-const bufferToReadable = (buffer) => {
+const makeReadable = async (filename) => {
+  const buffer = Buffer.concat(
+    await (
+      await client.send(
+        new GetObjectCommand({
+          Bucket: process.env.BUCKET_NAME,
+          Key: filename,
+        })
+      )
+    ).Body.toArray()
+  );
+
   const readable = new Readable();
   let index = 0;
   readable._read = () => {
@@ -163,18 +174,7 @@ const bufferToReadable = (buffer) => {
 
 app.post("/convert/:filename", async function (req, res) {
   if (extension(req.params.filename) === ".csv") {
-    const buffer = Buffer.concat(
-      await (
-        await client.send(
-          new GetObjectCommand({
-            Bucket: process.env.BUCKET_NAME,
-            Key: req.params.filename,
-          })
-        )
-      ).Body.toArray()
-    );
-
-    const readable = bufferToReadable(buffer);
+    const readable = makeReadable(req.params.filename);
 
     let jsonStream = readable.pipe(csv());
 
@@ -250,21 +250,16 @@ app.get("/get-dimensions", (_req, res) => {
 
 app.get("/detect-fields/:filename", async (req, res) => {
   if (extension(req.params.filename) === ".json") {
-    const fstream = await fs.createReadStream(
-      path.join(__dirname, "uploads/" + req.params.filename),
-      {
-        start: 0,
-        end: 5000, //find all fields within the first 5000 characters
-      }
-    );
-    let data = "";
+    const readable = makeReadable(req.params.filename);
 
-    fstream.on("readable", function () {
+    //let jsonStream = readable.pipe(csv());
+    let data = "";
+    readable.on("readable", function () {
       //basically loop until you find an ending } in a chunk
 
       let chunk;
 
-      while ((chunk = fstream.read()) !== null) {
+      while ((chunk = readable.read()) !== null) {
         data = chunk.toString();
 
         while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
@@ -274,7 +269,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
       }
     });
 
-    fstream.on("end", () => {
+    readable.on("end", () => {
       res.send(
         Object.entries(data).map((d) => {
           return d[0];
