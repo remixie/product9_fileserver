@@ -258,7 +258,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
       //basically loop until you find an ending } in a chunk
       data = chunk.toString();
 
-      data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
+      data = data.match(/{(.|\n|\r)+}/g)[0].toString();
 
       console.log(data);
 
