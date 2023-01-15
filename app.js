@@ -9,6 +9,7 @@ import {
   ListObjectsCommand,
   S3Client,
   DeleteObjectCommand,
+  PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 const __filename = fileURLToPath(import.meta.url);
@@ -157,27 +158,28 @@ app.post("/convert/:filename", async function (req, res) {
     );
 
     const readable = bufferToReadable(buffer);
-    let result = "";
+
+    /*let result = "";
     readable.on("data", (chunk) => {
       result += chunk.toString();
     });
-    readable.on("end", () => {
-      console.log(result);
-    });
+    readable.on("end", async () => {
+      //console.log(result);
 
-    //Readable.from(buffer).on("data", (chunk) => responseDataChunks.push(chunk));
+    });*/
 
-    //Readable.from(buffer).once("end", () => responseDataChunks.join(""));
+    let result = readable.pipe(csv());
 
-    /*const jsonBuffer = Buffer.from(JSON.stringify(jsonData, null, 2));
     await client.send(
       new PutObjectCommand({
         Bucket: process.env.BUCKET_NAME,
-        Key: req.params.filename + ".json",
-        Body: jsonBuffer,
+        Key: req.params.filename.replace(".csv", "-generated.json"),
+        Body: result,
         ContentType: "application/json",
       })
-    );*/
+    );
+
+    //readable.pipe(csv({ downstreamFormat: "array" })).pipe(writeStream)
 
     console.log(req.params.filename + " has been converted!");
     res.send(req.params.filename + " has been converted!");
