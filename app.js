@@ -137,10 +137,16 @@ app.post("/convert/:filename", async function (req, res) {
       })
     );
 
-    const csvData = data.Body; //.toString();
+    let responseDataChunks = [];
     //const jsonData = await csv().fromString(csvData);
 
-    console.log(csvData);
+    //data.Body.once("error", (err) => reject(err));
+
+    data.Body.on("data", (chunk) => responseDataChunks.push(chunk));
+
+    data.Body.once("end", () => responseDataChunks.join(""));
+
+    console.log(responseDataChunks);
 
     /*const jsonBuffer = Buffer.from(JSON.stringify(jsonData, null, 2));
     await client.send(
