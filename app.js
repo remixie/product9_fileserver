@@ -174,7 +174,7 @@ const makeReadable = async (filename) => {
 
 app.post("/convert/:filename", async function (req, res) {
   if (extension(req.params.filename) === ".csv") {
-    const readable = makeReadable(req.params.filename);
+    const readable = await makeReadable(req.params.filename);
 
     let jsonStream = readable.pipe(csv());
 
@@ -250,7 +250,7 @@ app.get("/get-dimensions", (_req, res) => {
 
 app.get("/detect-fields/:filename", async (req, res) => {
   if (extension(req.params.filename) === ".json") {
-    const readable = makeReadable(req.params.filename);
+    const readable = await makeReadable(req.params.filename);
 
     //let jsonStream = readable.pipe(csv());
     let data = "";
