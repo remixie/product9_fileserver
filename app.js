@@ -44,12 +44,21 @@ app.post("/fileupload", async function (req, res) {
 
     if (extension(filename) === ".csv" || extension(filename) === ".json") {
       console.log(`Upload of '${filename}' started`);
+      let ContentType = "application/json";
+      if (extension(filename) === ".csv") {
+        ContentType = "text/csv";
+      }
 
       const upload = new Upload({
         client,
         queueSize: 4, // optional concurrency configuration
         leavePartsOnError: false, // optional manually handle dropped parts
-        params: { Bucket: process.env.BUCKET_NAME, Key: filename, Body: file },
+        params: {
+          Bucket: process.env.BUCKET_NAME,
+          Key: filename,
+          Body: file,
+          ContentType,
+        },
       });
 
       upload.on("httpUploadProgress", (progress) => {
