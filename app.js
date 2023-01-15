@@ -2,6 +2,7 @@ import express from "express";
 const app = express();
 import path from "path";
 import fs from "fs";
+import { Readable } from "node:stream";
 import { fileURLToPath } from "url";
 import { Upload } from "@aws-sdk/lib-storage";
 import {
@@ -9,7 +10,6 @@ import {
   S3Client,
   DeleteObjectCommand,
   GetObjectCommand,
-  PutObjectCommand,
 } from "@aws-sdk/client-s3";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -130,24 +130,29 @@ app.delete("/file/:filename", async (req, res) => {
 
 app.post("/convert/:filename", async function (req, res) {
   if (extension(req.params.filename) === ".csv") {
-    const data = await client.send(
-      new GetObjectCommand({
-        Bucket: process.env.BUCKET_NAME,
-        Key: req.params.filename,
-      })
+    const buffer = Buffer.concat(
+      await (
+        await client.send(
+          new GetObjectCommand({
+            Bucket: process.env.BUCKET_NAME,
+            Key: req.params.filename,
+          })
+        )
+      ).Body.toArray()
     );
 
-    let responseDataChunks = [];
+    console.log(buffer);
+
     //const jsonData = await csv().fromString(csvData);
 
     //data.Body.once("error", (err) => reject(err));
 
-    data.Body.on("data", (chunk) => responseDataChunks.push(chunk));
+    //data.Body.on("data", (chunk) => responseDataChunks.push(chunk));
 
-    data.Body.once("end", () => {
+    /*data.Body.once("end", () => {
       responseDataChunks.join("");
       console.log(responseDataChunks);
-    });
+    });*/
 
     /*const jsonBuffer = Buffer.from(JSON.stringify(jsonData, null, 2));
     await client.send(
