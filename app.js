@@ -5,7 +5,7 @@ import fs from "fs";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "url";
 import { Upload } from "@aws-sdk/lib-storage";
-import { isNil } from "ramda";
+import { isNil, isEmpty } from "ramda";
 import {
   ListObjectsCommand,
   S3Client,
@@ -30,7 +30,12 @@ let client = new S3Client({
 });
 
 function extension(filename) {
-  return filename.match(/\.[0-9a-z]+$/i)[0];
+  let matches = filename.match(/\.[0-9a-z]+$/i);
+  if (!isEmpty(matches)) {
+    return matches[0];
+  } else {
+    return "";
+  }
 }
 
 app.use(express.json());
