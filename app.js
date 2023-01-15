@@ -263,16 +263,17 @@ app.get("/detect-fields/:filename", async (req, res) => {
         while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
           data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
         }
-        data = JSON.parse(data);
+        console.log(data);
+        //data = JSON.parse(data);
       }
     });
 
     readable.on("end", () => {
-      res.send(
+      /*res.send(
         Object.entries(data).map((d) => {
           return d[0];
         })
-      );
+      );*/
     });
   }
 });
