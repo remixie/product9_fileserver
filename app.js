@@ -197,12 +197,19 @@ app.post("/convert/:filename", async function (req, res) {
   }
 });
 
-import metadata from "./metadata/setfields.json" assert { type: "json" };
 app.get("/get-fields/:filename", async (req, res) => {
-  res.send(
-    metadata.data.filter((data) => data.id === req.params.filename)[0]
-      ?.attributes
-  );
+  const readable = await makeReadable("metadata/setfields.json");
+  let metadata = "";
+  readable.on("data", (chunk) => {
+    metadata += chunk;
+  });
+
+  readable.on("end", () => {
+    metadata = JSON.parse(metadata);
+    res.send(
+      metadata.filter((data) => data.id === req.params.filename)[0]?.attributes
+    );
+  });
 });
 
 app.post("/set-fields/:filename", async (req, res) => {
@@ -274,10 +281,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
           i++;
         }
       }
-      if (i === 10) console.log("Couldn't parse json after 1000 iterations");
-
-      console.log(i);
-      console.log(data[0]);
+      if (i === 1000) console.log("Couldn't parse json after 1000 iterations");
 
       for (const property in data[0]) {
         uniqueProperties.add(property);
