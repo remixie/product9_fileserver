@@ -261,6 +261,8 @@ app.get("/detect-fields/:filename", async (req, res) => {
     });
 
     readable.on("end", () => {
+      console.log("data=>");
+      console.log(data);
       data = JSON.parse(data);
 
       for (const property in data[0]) {
