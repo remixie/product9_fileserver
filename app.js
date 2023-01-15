@@ -128,6 +128,21 @@ app.delete("/file/:filename", async (req, res) => {
   deletedMsg(req, res);
 });
 
+const bufferToReadable = (buffer) => {
+  const readable = new Readable();
+  let index = 0;
+  readable._read = () => {
+    if (index >= buffer.length) {
+      readable.push(null);
+      return;
+    }
+    const chunk = buffer.slice(index, index + 1024);
+    index += chunk.length;
+    readable.push(chunk);
+  };
+  return readable;
+};
+
 app.post("/convert/:filename", async function (req, res) {
   if (extension(req.params.filename) === ".csv") {
     const buffer = Buffer.concat(
@@ -141,11 +156,18 @@ app.post("/convert/:filename", async function (req, res) {
       ).Body.toArray()
     );
 
+    const readable = bufferToReadable(buffer);
+    let result = "";
+    readable.on("data", (chunk) => {
+      result += chunk.toString();
+    });
+    readable.on("end", () => {
+      console.log(result);
+    });
+
     //Readable.from(buffer).on("data", (chunk) => responseDataChunks.push(chunk));
 
     //Readable.from(buffer).once("end", () => responseDataChunks.join(""));
-
-    console.log(buffer);
 
     /*const jsonBuffer = Buffer.from(JSON.stringify(jsonData, null, 2));
     await client.send(
