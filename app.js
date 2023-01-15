@@ -276,6 +276,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
       }
       if (i === 10) console.log("Couldn't parse json after 1000 iterations");
 
+      console.log(i);
       console.log(data[0]);
 
       for (const property in data[0]) {
