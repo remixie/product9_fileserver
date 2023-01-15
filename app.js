@@ -141,18 +141,15 @@ app.post("/convert/:filename", async function (req, res) {
       ).Body.toArray()
     );
 
-    console.log(buffer);
+    let responseDataChunks = [];
+    const readable = Readable.from(buffer);
 
-    //const jsonData = await csv().fromString(csvData);
+    readable.on("data", (chunk) => responseDataChunks.push(chunk));
 
-    //data.Body.once("error", (err) => reject(err));
-
-    //data.Body.on("data", (chunk) => responseDataChunks.push(chunk));
-
-    /*data.Body.once("end", () => {
+    readable.once("end", () => {
       responseDataChunks.join("");
       console.log(responseDataChunks);
-    });*/
+    });
 
     /*const jsonBuffer = Buffer.from(JSON.stringify(jsonData, null, 2));
     await client.send(
