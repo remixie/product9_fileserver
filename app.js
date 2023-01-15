@@ -159,15 +159,6 @@ app.post("/convert/:filename", async function (req, res) {
 
     const readable = bufferToReadable(buffer);
 
-    /*let result = "";
-    readable.on("data", (chunk) => {
-      result += chunk.toString();
-    });
-    readable.on("end", async () => {
-      //console.log(result);
-
-    });*/
-
     let jsonStream = readable.pipe(csv());
 
     let jsonData = "";
@@ -175,7 +166,6 @@ app.post("/convert/:filename", async function (req, res) {
       jsonData += chunk.toString();
     });
     jsonStream.on("end", async () => {
-      //console.log(result);
       await client.send(
         new PutObjectCommand({
           Bucket: process.env.BUCKET_NAME,
@@ -184,12 +174,9 @@ app.post("/convert/:filename", async function (req, res) {
           ContentType: "application/json",
         })
       );
+      console.log(req.params.filename + " has been converted!");
+      res.send(req.params.filename + " has been converted!");
     });
-
-    //readable.pipe(csv({ downstreamFormat: "array" })).pipe(writeStream)
-
-    console.log(req.params.filename + " has been converted!");
-    res.send(req.params.filename + " has been converted!");
   }
 });
 
