@@ -262,6 +262,8 @@ app.get("/detect-fields/:filename", async (req, res) => {
       while ((chunk = readable.read()) !== null) {
         data = chunk.toString();
 
+        console.log(data);
+
         while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
           data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
         }
