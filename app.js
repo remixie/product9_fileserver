@@ -207,7 +207,8 @@ app.get("/get-fields/:filename", async (req, res) => {
   readable.on("end", () => {
     metadata = JSON.parse(metadata);
     res.send(
-      metadata.filter((data) => data.id === req.params.filename)[0]?.attributes
+      metadata.data.filter((data) => data.id === req.params.filename)[0]
+        ?.attributes
     );
   });
 });
