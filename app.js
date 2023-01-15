@@ -142,14 +142,13 @@ app.post("/convert/:filename", async function (req, res) {
     );
 
     let responseDataChunks = [];
-    const readable = Readable.from(buffer);
-
-    readable.on("data", (chunk) => responseDataChunks.push(chunk));
-
-    readable.once("end", () => {
-      responseDataChunks.join("");
-      console.log(responseDataChunks);
+    buffer.forEach((v, _i, _a) => {
+      Readable.from(v).on("data", (chunk) => responseDataChunks.push(chunk));
     });
+
+    responseDataChunks.join("");
+
+    console.log(responseDataChunks);
 
     /*const jsonBuffer = Buffer.from(JSON.stringify(jsonData, null, 2));
     await client.send(
