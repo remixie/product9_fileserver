@@ -251,9 +251,17 @@ app.post("/set-fields/:filename", async (req, res) => {
   }
 });
 
-import dimensions from "./metadata/dimensions.json" assert { type: "json" };
-app.get("/get-dimensions", (_req, res) => {
-  res.send(dimensions);
+app.get("/get-dimensions", async (_req, res) => {
+  const readable = await makeReadable("metadata/setfields.json");
+  let dimensions = "";
+  readable.on("data", (chunk) => {
+    dimensions += chunk;
+  });
+
+  readable.on("end", () => {
+    dimensions = JSON.parse(dimensions);
+    res.send(dimensions);
+  });
 });
 
 app.get("/detect-fields/:filename", async (req, res) => {
