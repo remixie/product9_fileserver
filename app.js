@@ -142,11 +142,11 @@ app.post("/convert/:filename", async function (req, res) {
     );
 
     let responseDataChunks = [];
-    buffer.forEach((v, _i, _a) => {
-      Readable.from(v).on("data", (chunk) => responseDataChunks.push(chunk));
-    });
+    Readable.from(buffer).on("data", (chunk) =>
+      responseDataChunks.push(chunk.toString())
+    );
 
-    responseDataChunks.join("");
+    Readable.from(buffer).once("end", () => responseDataChunks.join(""));
 
     console.log(responseDataChunks);
 
