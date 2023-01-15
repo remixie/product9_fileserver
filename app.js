@@ -92,6 +92,7 @@ app.get("/filelist", async (_req, res) => {
   if (!isNil(files.Contents)) {
     //console.log(files.Contents.map((x) => x.Key));
     files = files.Contents.map((x) => x.Key);
+    files = files.filter((x) => !x.includes("metadata/"));
     files.sort((a, b) => {
       if (extension(a) > extension(b)) {
         return -1;
@@ -252,7 +253,7 @@ app.post("/set-fields/:filename", async (req, res) => {
 });
 
 app.get("/get-dimensions", async (_req, res) => {
-  const readable = await makeReadable("metadata/setfields.json");
+  const readable = await makeReadable("metadata/dimensions.json");
   let dimensions = "";
   readable.on("data", (chunk) => {
     dimensions += chunk;
