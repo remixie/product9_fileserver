@@ -143,7 +143,7 @@ app.post("/convert/:filename", async function (req, res) {
 
     let responseDataChunks = [];
     Readable.from(buffer).on("data", (chunk) =>
-      responseDataChunks.push(chunk.toString())
+      responseDataChunks.push(chunk.toString("utf8"))
     );
 
     Readable.from(buffer).once("end", () => responseDataChunks.join(""));
