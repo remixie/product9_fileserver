@@ -256,16 +256,13 @@ app.get("/detect-fields/:filename", async (req, res) => {
     let data = "";
     readable.on("data", (chunk) => {
       //basically loop until you find an ending } in a chunk
+      data = chunk.toString();
 
-      while (chunk !== null) {
-        data = chunk.toString();
-
-        while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
-          data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
-        }
-        console.log(data);
-        //data = JSON.parse(data);
+      while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
+        data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
       }
+
+      data = JSON.parse(data);
     });
 
     readable.on("end", () => {
