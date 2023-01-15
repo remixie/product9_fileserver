@@ -5,7 +5,7 @@ import fs from "fs";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "url";
 import { Upload } from "@aws-sdk/lib-storage";
-import { isNil, isEmpty } from "ramda";
+import { isNil, isEmpty, trim } from "ramda";
 import {
   ListObjectsCommand,
   S3Client,
@@ -256,7 +256,7 @@ app.get("/detect-fields/:filename", async (req, res) => {
     let data = "";
     readable.on("data", (chunk) => {
       //basically loop until you find an ending } in a chunk
-      data = chunk.toString();
+      data = trim(chunk.toString());
 
       while (data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)) {
         data = data.match(/{(.|\n|\r)+}(?=,(\s)+{)/g)[0].toString();
