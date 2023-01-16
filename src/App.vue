@@ -33,13 +33,17 @@ let fetchData = async () => {
   if (is_prod) {
     const response = await axios.get("/filelist");
     list.data = response.data;
+
     let temp = Object.values(list.data).filter((obj: string) => {
       return obj.includes(".json");
     });
+    console.log(temp)
     for (let l in temp) {
       linked_fields.data = new Array();
       getLinkedFields(temp[l]);
     }
+
+
   } else {
     list.data = ["example.json"] as string[];
     linked_fields.data = [

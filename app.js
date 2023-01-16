@@ -1,7 +1,6 @@
 import express from "express";
 const app = express();
 import path from "path";
-import fs from "fs";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "url";
 import { Upload } from "@aws-sdk/lib-storage";
@@ -90,7 +89,6 @@ app.get("/filelist", async (_req, res) => {
     })
   );
   if (!isNil(files.Contents)) {
-    //console.log(files.Contents.map((x) => x.Key));
     files = files.Contents.map((x) => x.Key);
     files = files.filter((x) => !x.includes("metadata/"));
     files.sort((a, b) => {
@@ -307,7 +305,9 @@ app.get("/detect-fields/:filename", async (req, res) => {
           i++;
         }
       }
-      if (i === 1000) console.log("Couldn't parse json after 1000 iterations");
+      if (i === 1000) {
+        console.log("Couldn't parse json after 1000 iterations");
+      }
 
       for (const property in data[0]) {
         uniqueProperties.add(property);
