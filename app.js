@@ -5,7 +5,7 @@ import fs from "fs";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "url";
 import { Upload } from "@aws-sdk/lib-storage";
-import { isNil, isEmpty, trim } from "ramda";
+import { isNil, isEmpty } from "ramda";
 import {
   ListObjectsCommand,
   S3Client,
@@ -218,37 +218,53 @@ app.post("/set-fields/:filename", async (req, res) => {
   if (req.body.includes(null)) {
     res.send("All dimensions must be set with a field.");
   } else {
-    let op = "add";
-    if (
-      Object.values(metadata.data).filter(
-        (data) => data.id == req.params.filename
-      ).length
-    ) {
-      op = "replace";
-    }
+    const readable = await makeReadable("metadata/setfields.json");
+    let metadata = "";
+    readable.on("data", (chunk) => {
+      metadata += chunk;
+    });
 
-    const patch = [
-      {
-        op,
-        path: "/data/",
-        value: {
-          id: req.params.filename,
-          attributes: {
-            x: req.body[0],
-            y: req.body[1],
-            z: req.body[2],
-            color: req.body[3],
-            size: req.body[4],
+    readable.on("end", async () => {
+      metadata = JSON.parse(metadata);
+
+      let op = "add";
+      if (
+        Object.values(metadata.data).filter(
+          (data) => data.id == req.params.filename
+        ).length
+      ) {
+        op = "replace";
+      }
+
+      const patch = [
+        {
+          op,
+          path: "/data/",
+          value: {
+            id: req.params.filename,
+            attributes: {
+              x: req.body[0],
+              y: req.body[1],
+              z: req.body[2],
+              color: req.body[3],
+              size: req.body[4],
+            },
           },
         },
-      },
-    ];
-    let new_metadata = jsonpatch.applyPatch(metadata, patch).newDocument;
-    const fstream = fs.createWriteStream(
-      __dirname + "/metadata/setfields.json"
-    );
-    fstream.write(JSON.stringify(new_metadata));
-    res.send("Saved fields as dimensions for " + req.params.filename);
+      ];
+      let new_metadata = jsonpatch.applyPatch(metadata, patch).newDocument;
+
+      await client.send(
+        new PutObjectCommand({
+          Bucket: process.env.BUCKET_NAME,
+          Key: "metadata/setfields.json",
+          Body: new_metadata,
+          ContentType: "application/json",
+        })
+      );
+
+      res.send("Saved fields as dimensions for " + req.params.filename);
+    });
   }
 });
 
