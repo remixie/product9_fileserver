@@ -38,8 +38,8 @@ let fetchData = async () => {
       return obj.includes(".json");
     });
     console.log(temp)
+    linked_fields.data = new Array();
     for (let l in temp) {
-      linked_fields.data = new Array();
       await getLinkedFields(temp[l]);
     }
 
