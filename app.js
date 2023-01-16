@@ -258,7 +258,7 @@ app.post("/set-fields/:filename", async (req, res) => {
         new PutObjectCommand({
           Bucket: process.env.BUCKET_NAME,
           Key: "metadata/setfields.json",
-          Body: new_metadata,
+          Body: JSON.stringify(new_metadata),
           ContentType: "application/json",
         })
       );
