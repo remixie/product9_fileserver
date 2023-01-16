@@ -40,7 +40,7 @@ let fetchData = async () => {
     console.log(temp)
     for (let l in temp) {
       linked_fields.data = new Array();
-      getLinkedFields(temp[l]);
+      await getLinkedFields(temp[l]);
     }
 
 
