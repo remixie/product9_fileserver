@@ -91,7 +91,7 @@ app.get("/filelist/:filetype?", async (req, res) => {
   if (!isNil(files.Contents)) {
     files = files.Contents.map((x) => x.Key);
     files = files.filter((x) => !x.includes("metadata/"));
-    if (req.params.filetype === "json") {
+    if (req.params.filetype.toString() === "json") {
       files = files.filter(
         (x) => extension(x) === req.params.filetype.toString()
       );
