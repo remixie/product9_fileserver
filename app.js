@@ -80,7 +80,7 @@ app.post("/fileupload", async function (req, res) {
   req.pipe(req.busboy);
 });
 
-app.get("/filelist/:filetype", async (req, res) => {
+app.get("/filelist/:filetype?", async (req, res) => {
   let list = [];
 
   let files = await client.send(
@@ -92,7 +92,9 @@ app.get("/filelist/:filetype", async (req, res) => {
     files = files.Contents.map((x) => x.Key);
     files = files.filter((x) => !x.includes("metadata/"));
     if (req.params.filetype === "json") {
-      files = files.filter((x) => extension(x) === req.params.filetype);
+      files = files.filter(
+        (x) => extension(x) === req.params.filetype.toString()
+      );
     }
     files.sort((a, b) => {
       if (extension(a) > extension(b)) {
