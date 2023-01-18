@@ -91,10 +91,14 @@ app.get("/filelist/:filetype?", async (req, res) => {
   if (!isNil(files.Contents)) {
     files = files.Contents.map((x) => x.Key);
     files = files.filter((x) => !x.includes("metadata/"));
-    if (req.params.filetype.toString() === "json") {
-      files = files.filter(
-        (x) => extension(x) === req.params.filetype.toString()
-      );
+    if (!isNil(req.params.filetype)) {
+      console.log(typeof req.params.filetype.toString());
+      console.log(typeof "json");
+      if (req.params.filetype.toString() === "json") {
+        files = files.filter(
+          (x) => extension(x) === "." + req.params.filetype.toString()
+        );
+      }
     }
     files.sort((a, b) => {
       if (extension(a) > extension(b)) {
