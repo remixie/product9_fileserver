@@ -37,12 +37,10 @@ let fetchData = async () => {
     let temp = Object.values(list.data).filter((obj: string) => {
       return obj.includes(".json");
     });
-    console.log(temp)
     linked_fields.data = new Array();
     for (let l in temp) {
       await getLinkedFields(temp[l]);
     }
-
 
   } else {
     list.data = ["example.json"] as string[];
